@@ -131,7 +131,8 @@ class MixEHR():
                         / (self.zeta_sum+self.exp_p_sum[t_i-1])
                 temp_gamma[w_idx] *= np.exp((1/pat.Cj) * (self.m_ * self.exp_g[pat.patient_id])
                             - (0.5/pat.Cj**2) * (self.m_**2+self.s) * (2*gamma_not_i+1)
-                            - (0.5/pat.Cj**2) * (self.m_**2+self.s) * gamma_not_i)
+                            #- (0.5/pat.Cj**2) * (self.m_**2+self.s) * gamma_not_i
+                                           )
                 temp_gamma[w_idx] /= np.sum(temp_gamma[w_idx])
                 temp_exp_n[pat.patient_id] += temp_gamma[w_idx] * pat.word_freq[w_i]
                 temp_exp_m[t_i-1] += temp_gamma[w_idx] * pat.type_freq[t_i]
