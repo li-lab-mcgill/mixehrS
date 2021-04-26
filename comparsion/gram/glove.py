@@ -95,22 +95,22 @@ def print2file(buf, outFile):
 
 def train_glove(infile, inputSize=20000, batchSize=100, dimensionSize=100, maxEpochs=1000, outfile='result', x_max=100, alpha=0.75):
 	options = locals().copy()
-	print 'initializing parameters'
+	print('initializing parameters')
 	params = init_params(options)
 	tparams = init_tparams(params)
 
-	print 'loading data'
+	print('loading data')
 	I, J, Weight = load_data(infile)
 	n_batches = int(np.ceil(float(I.get_value(borrow=True).shape[0]) / float(batchSize)))
 
-	print 'building models'
+	print('building models')
 	weightVector, iVector, jVector, cost = build_model(tparams, options)
 	grads = T.grad(cost, wrt=tparams.values())
 	f_grad_shared, f_update = adadelta(tparams, grads, weightVector, iVector, jVector, cost)
 
 	logFile = outfile + '.log'
-	print 'training start'
-	for epoch in xrange(maxEpochs):
+	print('training start')
+	for epoch in list(range(maxEpochs)):
 		costVector = []
 		iteration = 0
 		for batchIndex in random.sample(range(n_batches), n_batches):
@@ -122,12 +122,12 @@ def train_glove(infile, inputSize=20000, batchSize=100, dimensionSize=100, maxEp
 
 			if (iteration % 1000 == 0):
 				buf = 'epoch:%d, iteration:%d/%d, cost:%f' % (epoch, iteration, n_batches, cost)
-				print buf
+				print(buf)
 				print2file(buf, logFile)
 			iteration += 1
 		trainCost = np.mean(costVector)
 		buf = 'epoch:%d, cost:%f' % (epoch, trainCost)
-		print buf
+		print(buf)
 		print2file(buf, logFile)
 		tempParams = unzip(tparams)
 		np.savez_compressed(outfile + '.' + str(epoch), **tempParams)

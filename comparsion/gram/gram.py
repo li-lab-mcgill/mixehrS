@@ -76,8 +76,10 @@ def _slice(_x, n, dim):
 def gru_layer(tparams, emb, options):
     hiddenDimSize = options['hiddenDimSize']
     timesteps = emb.shape[0]
-    if emb.ndim == 3: n_samples = emb.shape[1]
-    else: n_samples = 1
+    if emb.ndim == 3:
+        n_samples = emb.shape[1]
+    else:
+        n_samples = 1
 
     def stepFn(wx, h, U_gru):
         uh = T.dot(h, U_gru)
@@ -345,8 +347,8 @@ def train_GRAM(
             hidden = gru_layer(tparams, x_emb, options)
             hidden = dropout_layer(hidden, use_noise, dropoutRate)
             y_hat = softmax_layer(tparams, hidden) * mask[:, :, None]
-            precision_recall_curve_metric(test_set_y, y_hat, plot=True)
-            roc_curve_metric(test_set_y, y_hat, plot=True)
+            # precision_recall_curve_metric(test_set_y, y_hat, plot=True)
+            # roc_curve_metric(test_set_y, y_hat, plot=True)
 
 def parse_arguments(parser):
     parser.add_argument('seq_file', type=str, default="processed_corpus.csv", help='The path to the Pickled file containing visit information of patients')

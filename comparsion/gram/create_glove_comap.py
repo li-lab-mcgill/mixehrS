@@ -13,17 +13,22 @@ def countCooccurrenceProduct(visit, coMap):
 	codeSet = set(visit)
 	for code1 in codeSet:
 		for code2 in codeSet:
-			if code1 == code2: continue
+			if code1 == code2:
+				continue
 
 			product = visit.count(code1) * visit.count(code2)
 			key1 = (code1, code2)
 			key2 = (code2, code1)
 
-			if key1 in coMap: coMap[key1] += product
-			else: coMap[key1] = product
+			if key1 in coMap:
+				coMap[key1] += product
+			else:
+				coMap[key1] = product
 
-			if key2 in coMap: coMap[key2] += product
-			else: coMap[key2] = product
+			if key2 in coMap:
+				coMap[key2] += product
+			else:
+				coMap[key2] = product
 
 if __name__=='__main__':
 	seqFile = sys.argv[1]
@@ -37,7 +42,8 @@ if __name__=='__main__':
 	coMap = {}
 	count = 0
 	for patient in seqs:
-		if count % 1000 == 0: print count
+		if count % 1000 == 0:
+			print(count)
 		count += 1
 		for visit in patient:
 			for code in visit: 
