@@ -1,4 +1,4 @@
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_curve, average_precision_score, roc_curve, auc
 
 
@@ -22,14 +22,12 @@ def roc_curve_metric(y, p, plot=False):
 
     if plot:
         plt.plot(fpr, tpr, lw=1, label='{} curve (AUC = {:0.2f})'.format('RF', roc_auc_rf))
-
         plt.xlim([-0.01, 1.00])
         plt.ylim([-0.01, 1.01])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.title('ROC curve')
         plt.legend(loc='lower right')
-
         plt.plot([0, 1], [0, 1], color='navy', lw=1, linestyle='--')
         plt.show()
 
