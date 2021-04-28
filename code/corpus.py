@@ -10,8 +10,8 @@ from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 import argparse
-
 from utils import generate_data
+
 
 P = TypeVar('P')
 
@@ -137,7 +137,7 @@ class Corpus(Dataset):
     # def build_from_mixehr_fileformat(data_path: str, meta_path: str, label_path: str, persist_path: str = None,
     #                                  ignore_missing_labels: bool = False, top_n: int = None):
         '''
-        Reads a datafiles in the code format and returns a Corpus object.
+        Reads a datafiles in the mixehr format and returns a Corpus object.
         :param data_path: data records, no header, columns are separated with spaces.
                         It contains:
                             SUBJECT_ID (i.e., patient ID), data type ID, variable ID under the data type, frequency.
@@ -221,9 +221,9 @@ class Corpus(Dataset):
             print('finish')
 
         # read files
-        data = pd.read_csv(data_path)
+        data = pd.read_csv(data_path, sep='\t') # data_RAMQ.txt first 10000 rows
         # meta = pd.read_csv(meta_path, header=None, sep=' ')
-        labels = pd.read_csv(label_path)
+        labels = pd.read_csv(label_path) # if read sample files, the path is data_label_sample.csv
         print(data)
         print(labels)
 
@@ -299,8 +299,8 @@ class Corpus(Dataset):
             logger.info("Data stored in %s" % toStore)
 
         def __split__(size, corpus):
-            patients = []
-
+            train_patients = []
+            test_patients = []
             corpus_list = [None, None]
             splitted = False
 
@@ -308,22 +308,52 @@ class Corpus(Dataset):
             index = -1
 
             pbar = tqdm(corpus)
+            train_positive_limit = 0.5 * size
+            train_negative_limit = size - train_positive_limit
+            train_pat_index = []
+            train_labels = []
             for p, _, in pbar:
-                pbar.set_description("Processing patient %s (index: %s)" % (p.index, p.patient_id))
-
                 index += 1
                 p.patient_id = index
-                C += p.Cj
-                patients.append(p)
+                pat_label = p.y
+                if pat_label == 1 and train_positive_limit >= 0:
+                    train_pat_index.append(index)
+                    train_positive_limit -= 1
+                    train_labels.append(pat_label)
+                elif pat_label == 0 and train_negative_limit >= 0:
+                    train_pat_index.append(index)
+                    train_negative_limit -= 1
+                    train_labels.append(pat_label)
+                else:
+                    continue
+            index = -1
+            train_index = -1
+            test_index = -1
+            for p, _, in pbar:
+                pbar.set_description("Processing patient %s (index: %s)" % (p.index, p.patient_id))
+                index += 1
+                if p.patient_id in train_pat_index:
+                    train_index += 1
+                    p.patient_id = train_index
+                    C += p.Cj
+                    train_patients.append(p)
+                else:
+                    test_index += 1
+                    p.patient_id = test_index
+                    C += p.Cj
+                    test_patients.append(p)
 
-                if index + 1 == size and not splitted:
-                    corpus_list[0] = Corpus(patients, corpus.T, corpus.W, C)
-                    index = -1
-                    C = 0
-                    patients = []
-                    splitted = True
-
-            corpus_list[1] = Corpus(patients, corpus.T, corpus.W, C)
+                # if index + 1 == size and not splitted:
+                #     corpus_list[0] = Corpus(patients, corpus.T, corpus.W, C)
+                #     index = -1
+                #     C = 0
+                #     patients = []
+                #     splitted = True
+            # print(train_patients)
+            # import time
+            # time.sleep(100)
+            corpus_list[0] = Corpus(train_patients, corpus.T, corpus.W, C)
+            corpus_list[1] = Corpus(test_patients, corpus.T, corpus.W, C)
 
             return tuple(corpus_list)
 
@@ -502,9 +532,9 @@ def run(args):
     print(STORE_FOLDER)
 
     if cmd == 'process':
-        path = os.path.join(BASE_FOLDER, 'data.txt')
+        path = os.path.join(BASE_FOLDER, 'patient_data.txt')
         # meta = os.path.join(BASE_FOLDER, 'mimic_meta.txt')
-        labels = os.path.join(BASE_FOLDER, 'label.csv')
+        labels = os.path.join(BASE_FOLDER, 'patient_label.csv')
         # Corpus.build_from_mixehr_fileformat(path, meta, labels, STORE_FOLDER,
         #                                     ignore_missing_labels=args.ignore_missing, top_n=args.max)
         Corpus.build_from_mixehr_fileformat(path, labels, STORE_FOLDER,
@@ -520,6 +550,11 @@ def run(args):
         c = Corpus.read_corpus_from_directory(BASE_FOLDER)
         Corpus.split_stratified_cv(c, args.n_splits, STORE_FOLDER)
 
+
 if __name__ == '__main__':
-    run(parser.parse_args(['process', '-im', '-n', '150', '../data/', '../store/']))
-    run(parser.parse_args(['split', '../store/', '../store/']))
+    # run(parser.parse_args(['process', '-im', '-n', '150', './data/', './store/']))
+    # run(parser.parse_args(['split', 'store/', 'store/']))
+    # run(parser.parse_args(['process', '-im', '-n', '150', './sample_dataset/', './sample_store/']))
+    run(parser.parse_args(['split', 'sample_store/', 'sample_store/']))
+    # run(parser.parse_args(['stratifiedcv', '-cv', '5', '/Users/cuent/Downloads/processed_new/mv/out',
+    #                        '/Users/cuent/Downloads/processed_new/mv/out']))
